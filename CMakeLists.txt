@@ -13,4 +13,5 @@ set(CMAKE_AUTOMOC ON)
 
 add_executable(ip_reporter src/main.cpp)
 
-target_link_libraries(ip_reporter Qt5::Widgets Qt5::Core Qt5::Gui Qt5::Network pcap)
+find_package(Threads REQUIRED)
+target_link_libraries(ip_reporter PRIVATE Qt5::Widgets Qt5::Core Qt5::Gui Qt5::Network Threads::Threads pcap)

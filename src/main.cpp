@@ -20,6 +20,8 @@
 #include <netinet/udp.h>
 #include <arpa/inet.h>
 
+// comment here
+
 const char *DESTINATION_IP = "255.255.255.255";
 const uint16_t SOURCE_PORT = 14236;
 const uint16_t DESTINATION_PORT = 14235;
@@ -211,6 +213,76 @@ void IPReporter::capture_packets()
     pcap_freealldevs(alldevs);
 }
 
+// non-freebsd code
+
+// PacketInfo IPReporter::extract_packet_info(const u_char *packet, struct pcap_pkthdr packet_header)
+// {
+//     PacketInfo info;
+
+//     struct ether_header *eth_header;
+//     eth_header = (struct ether_header *)packet;
+
+//     // Check if it's an IP packet
+//     if (ntohs(eth_header->ether_type) != ETHERTYPE_IP)
+//     {
+//         std::cerr << "Not an IP packet" << std::endl;
+//         return info;
+//     }
+
+//     // Extract source MAC address
+//     char mac_addr[18];
+//     snprintf(mac_addr, sizeof(mac_addr), "%02x:%02x:%02x:%02x:%02x:%02x",
+//              eth_header->ether_shost[0],
+//              eth_header->ether_shost[1],
+//              eth_header->ether_shost[2],
+//              eth_header->ether_shost[3],
+//              eth_header->ether_shost[4],
+//              eth_header->ether_shost[5]);
+//     info.source_mac = mac_addr;
+
+//     struct ip *ip_header;
+//     ip_header = (struct ip *)(packet + sizeof(struct ether_header));
+
+//     // Check if the packet's destination IP matches the specified destination IP
+//     char ip_addr[INET_ADDRSTRLEN];
+//     inet_ntop(AF_INET, &(ip_header->ip_dst), ip_addr, INET_ADDRSTRLEN);
+//     if (strcmp(ip_addr, DESTINATION_IP) != 0)
+//     {
+//         std::cerr << "Destination IP does not match" << std::endl;
+//         return info;
+//     }
+
+//     // Check if the packet is a UDP packet
+//     if (ip_header->ip_p != IPPROTO_UDP)
+//     {
+//         std::cerr << "Not a UDP packet" << std::endl;
+//         return info;
+//     }
+
+//     // Extract the UDP header
+//     struct udphdr *udp_header;
+//     udp_header = (struct udphdr *)(packet + sizeof(struct ether_header) + sizeof(struct ip));
+
+//     // Check if the source and destination ports match
+//     if (ntohs(udp_header->source) != SOURCE_PORT || ntohs(udp_header->dest) != DESTINATION_PORT)
+//     {
+//         std::cerr << "Ports do not match" << std::endl;
+//         return info;
+//     }
+
+//     // Extract source IP address
+//     inet_ntop(AF_INET, &(ip_header->ip_src), ip_addr, INET_ADDRSTRLEN);
+//     info.source_ip = ip_addr;
+
+//     // Debug output
+//     std::cout << "Source IP: " << info.source_ip << std::endl;
+//     std::cout << "Source MAC: " << info.source_mac << std::endl;
+
+//     return info;
+// }
+
+// freebsd code
+
 PacketInfo IPReporter::extract_packet_info(const u_char *packet, struct pcap_pkthdr packet_header)
 {
     PacketInfo info;
@@ -260,7 +332,7 @@ PacketInfo IPReporter::extract_packet_info(const u_char *packet, struct pcap_pkt
     udp_header = (struct udphdr *)(packet + sizeof(struct ether_header) + sizeof(struct ip));
 
     // Check if the source and destination ports match
-    if (ntohs(udp_header->source) != SOURCE_PORT || ntohs(udp_header->dest) != DESTINATION_PORT)
+    if (ntohs(udp_header->uh_sport) != SOURCE_PORT || ntohs(udp_header->uh_dport) != DESTINATION_PORT)
     {
         std::cerr << "Ports do not match" << std::endl;
         return info;
